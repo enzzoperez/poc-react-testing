@@ -1,63 +1,38 @@
-import React, { useState } from "react";
-import "./App.css";
+import React, { useEffect, useState } from "react";
+import { useQuery } from "react-query";
+import { Link } from "react-router-dom";
+import useSWR from "swr";
+import FormSearch from "./formSearch";
+import ListRepos from "./listItems";
+import { getProjects } from "./services/github";
 
 function App() {
-    const [taskToAdd, setTaskToAdd] = useState();
-    const [listTaks, setListTask] = useState([]);
+    const [user, setUser] = useState('');
 
-    const addTask = () => {
-        if (listTaks.length < 10) {
-            setTaskToAdd();
-            setListTask([...listTaks, taskToAdd]);
-        }
+    const { isLoading, error, data } = useSWR(`${user || ''}`,getProjects);
+
+    useEffect(() => {
+        // console.log("REACT swr", isLoading, error, data);
+    }, [isLoading, error, data]);
+
+    const changeForm = (value) => {
+        setUser(value);
     };
 
-    const deleteTask = (idTask) => {
-      const newListTask = listTaks.filter(e=>e.id != idTask)
-      setListTask(newListTask)
-    };
+    if (isLoading) return <div>Cargando ...</div>;
+    if (error || typeof data == 'string') return <div>Ups!, ocurrio un error</div>;
 
     return (
-        <div>
-            <h1>Bienvenido a todo task</h1>
-            <label htmlFor="taskInput">Ingrese tarea</label>
-            <textarea
-                id={"taskInput"}
-                placeholder="Ingrese Tarea"
-                maxLength={100}
-                type="text"
-                value={(taskToAdd && taskToAdd.task) || ""}
-                onChange={(e) =>
-                    setTaskToAdd({
-                        id: new Date(Date.now()).toISOString(),
-                        task: e.target.value,
-                    })
-                }
-            />
-            <div>
-                <button
-                    disabled={!taskToAdd || taskToAdd.length < 1}
-                    onClick={() => addTask()}
-                >
-                    Agregar tarea
-                </button>
-            </div>
-            <div>
-                <h2>Tareas agregadas: {listTaks.length}</h2>
-                <div>
-                    {listTaks.length > 0 &&
-                        listTaks.map((t) => {
-                            return (
-                                <div key={t.id}>
-                                    <h3>{t.task}</h3>
-                                    <button onClick={() => deleteTask(t.id)}>
-                                        Eliminar
-                                    </button>
-                                </div>
-                            );
-                        })}
-                </div>
-            </div>
+        <div style={{ padding: 80 }}>
+            <FormSearch handleChange={changeForm} />
+            {
+                !user ?
+                <h3>Enter a userName</h3> :
+                data ?
+                <ListRepos data={typeof data != 'string' && data}/> : 
+                <p>Cargando ...</p>
+            }
+            <ListRepos />
         </div>
     );
 }

@@ -1,72 +1,72 @@
-import React from 'react';
-import { render, screen, cleanup, wait } from '@testing-library/react';
+import React from "react";
+import {
+    render,
+    screen,
+    waitForElementToBeRemoved, waitForElement
+} from "@testing-library/react";
 import user from "@testing-library/user-event";
-import App from './App';
+import App from "./App";
+import { getProjects } from "./services/github";
 
-const taskToAdd = 'one task'
+jest.mock("./services/github");
+const data = {
+    id: 131356193,
+    node_id: "MDEwOlJlcG9zaXRvcnkxMzEzNTYxOTM=",
+    name: "apollo-react-test",
+    full_name: "enzzoperez/apollo-react-test",
+    owner: {
+        login: "enzzoperez",
+        id: 22937791,
+    },
+    default_branch: "master",
+};
 
-const renderToTest = () => {
-  const utils = render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
-    return {
-      utils,
-      inputTask,
-      buttonAdd
-    }
-}
+beforeEach(() => {
+    document.body.innerHTML = "";
+  });
 
-test('add a task', () => {
-    render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
+// getProjects('ajksdkasd').then(res=>console.log('LCKDSD', res))
+test("Test Call to api", async () => {
+    getProjects.mockResolvedValue([data])
+    render(<App />);
+    expect(screen.getByText("Enter", { exact: false }));
 
-    expect(screen.getByText('ingrese', {exact: false})).toBeInTheDocument()
-    expect(buttonAdd).toBeDisabled()
-    
-    user.type(inputTask, taskToAdd)
-    expect(buttonAdd).toBeEnabled()
+    const input = screen.getByPlaceholderText("ingresa nombre", {
+        exact: false,
+    });
+    const button = screen.getByRole("button", { name: "Buscar", exact: false });
+    expect(button).toBeDisabled();
+    user.type(input, "enzzoperez");
+    expect(button).toBeEnabled();
+    user.click(button);
 
-    user.click(buttonAdd)
-    
-    expect(inputTask.textContent).toBe('')
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('1')
+    await waitForElementToBeRemoved(() => screen.getByText("cargando", { exact: false }));
+    expect(getProjects).toHaveBeenCalledTimes(1);
+    expect(getProjects).toHaveBeenCalledWith("enzzoperez");
+    expect(screen.getByText("apollo-react-test", { exact: false })).toBeInTheDocument()
+});
+
+test('should error on screen', async () => {
+    getProjects.mockResolvedValueOnce('eirirui')
+    // getProjects('enzo').then(res=>console.log('LCKDSD', res))
+    render(<App />);
+    expect(screen.getByText("Enter", { exact: false }));
+
+    const input = screen.getByPlaceholderText("ingresa nombre", {
+        exact: false,
+    });
+    const button = screen.getByRole("button", { name: "Buscar", exact: false });
+    expect(button).toBeDisabled();
+    user.type(input, "res");
+    expect(button).toBeEnabled();
+    user.click(button);
+    expect(getProjects).toHaveBeenCalledTimes(2);
+    expect(getProjects).toHaveBeenCalledWith("res");
+    await waitForElementToBeRemoved(() => screen.getByText("cargando", { exact: false }));
+    expect(screen.getByText("error", { exact: false })).toBeInTheDocument()
+
 })
 
-test('Testing doesnt allow more than 10 task', async() => {
-    render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
-    
-    await wait(()=>{
-      for (let index = 0; index < 11; index++) {
-        user.type(inputTask, `${index}a`)
-        expect(buttonAdd).toBeEnabled()
-        user.click(buttonAdd)
-      }
-    })
 
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('10')
-    
-    user.type(inputTask, `11 tarea`)
-    expect(buttonAdd).toBeEnabled()
-    user.click(buttonAdd)
-
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('10')
-})
-
-test('Test Delete Button', () => {
-  const {utils, buttonAdd, inputTask} = renderToTest()
-
-  user.type(inputTask, taskToAdd)
-  user.click(buttonAdd)
-
-  expect(utils.getByText('tareas agregadas', {exact: false})).toHaveTextContent('1')
-
-  const deleteButton = utils.getByRole('button', {name: 'Eliminar'})
-  user.click(deleteButton)
-
-  expect(utils.getByText('tareas agregadas', {exact: false})).toHaveTextContent('0')
-})
 
 
