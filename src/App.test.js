@@ -1,72 +1,28 @@
-import React from 'react';
-import { render, screen, cleanup, wait } from '@testing-library/react';
+import React from "react";
+import { render, screen, cleanup, wait } from "@testing-library/react";
 import user from "@testing-library/user-event";
-import App from './App';
+import App from "./App";
 
-const taskToAdd = 'one task'
 
-const renderToTest = () => {
-  const utils = render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
-    return {
-      utils,
-      inputTask,
-      buttonAdd
-    }
-}
 
-test('add a task', () => {
-    render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
+const renderInit = () => {
+    const utils = render(<App />);
+    const inputUser = utils.getByPlaceholderText("ingrese usuario", {
+        exact: false,
+    });
+    const buttonSearch = utils.getByRole("button",{name: /buscar/i});
 
-    expect(screen.getByText('ingrese', {exact: false})).toBeInTheDocument()
-    expect(buttonAdd).toBeDisabled()
-    
-    user.type(inputTask, taskToAdd)
-    expect(buttonAdd).toBeEnabled()
+    return ({utils, buttonSearch, inputUser})
+};
 
-    user.click(buttonAdd)
-    
-    expect(inputTask.textContent).toBe('')
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('1')
+
+test('should success request to api', () => {
+    const {utils, buttonSearch, inputUser} = renderInit()
+    expect(utils.getByText(/esperando/i)).toBeInTheDocument()
+    expect(buttonSearch).toBeDisabled()
+    user.type('e', inputUser)
+    expect(buttonSearch).not.toBeDisabled()
+    // user.type('nzzoperez', inputUser)
+    // user.click(buttonSearch)
+
 })
-
-test('Testing doesnt allow more than 10 task', async() => {
-    render(<App />)
-    const inputTask = screen.getByPlaceholderText('ingrese', {exact: false})
-    const buttonAdd = screen.getByRole('button', {name: 'Agregar tarea'})
-    
-    await wait(()=>{
-      for (let index = 0; index < 11; index++) {
-        user.type(inputTask, `${index}a`)
-        expect(buttonAdd).toBeEnabled()
-        user.click(buttonAdd)
-      }
-    })
-
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('10')
-    
-    user.type(inputTask, `11 tarea`)
-    expect(buttonAdd).toBeEnabled()
-    user.click(buttonAdd)
-
-    expect(screen.getByText('tareas agregadas', {exact: false})).toHaveTextContent('10')
-})
-
-test('Test Delete Button', () => {
-  const {utils, buttonAdd, inputTask} = renderToTest()
-
-  user.type(inputTask, taskToAdd)
-  user.click(buttonAdd)
-
-  expect(utils.getByText('tareas agregadas', {exact: false})).toHaveTextContent('1')
-
-  const deleteButton = utils.getByRole('button', {name: 'Eliminar'})
-  user.click(deleteButton)
-
-  expect(utils.getByText('tareas agregadas', {exact: false})).toHaveTextContent('0')
-})
-
-
