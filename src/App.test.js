@@ -9,13 +9,13 @@ import user from "@testing-library/user-event";
 import App from "./App";
 import { getUser } from "./serviceGithub";
 
-const getUserSuccess = jest.mock(getUser);
-getUserSuccess.mockResolvedValue({
+jest.mock("./serviceGithub");
+getUser.mockResolvedValue([{
     data: {
         id: "2231231",
         name: "enzouu",
     },
-});
+}]);
 
 const renderInit = () => {
     const utils = render(<App />);
@@ -35,4 +35,5 @@ test("should success request to api", () => {
     expect(buttonSearch).toBeEnabled();
     user.type(inputUser, "nzzoperez");
     user.click(buttonSearch);
+    
 });
