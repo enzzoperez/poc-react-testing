@@ -14,12 +14,12 @@ function App() {
         setLoading(true);
         getUser(user)
             .then((res) => {
-                console.log("RESSS", res);
+                // console.log("RESSS", res);
                 setListProjects(res);
                 setLoading(false);
             })
             .catch((e) => {
-                console.log("ERRO FRONTT", e);
+                console.log("ERRO FRONTT", e.data.message);
                 setError(`Error: ${e.data.message}`);
                 setLoading(false);
             });
@@ -39,13 +39,13 @@ function App() {
             </button>
 
             {listProjects && listProjects.length > 0 ? (
-                listProjects.map((p) => <p key={p.id}>{p.name}</p>)
+                listProjects.map((p,i) => <p key={p.id+i}>{p.name}</p>)
             ) : !listProjects && loading ? (
                 <p>Cargando</p>
             ) : !listProjects && !error ? (
                 <p>Esperando user</p>
             ) : (
-                <div>{error}</div>
+                <div>Error: {error}</div>
             )}
         </div>
     );
