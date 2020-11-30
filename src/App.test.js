@@ -16,6 +16,10 @@ const dataError = {
     }
 };
 
+afterEach(() => {
+    jest.clearAllMocks()
+  })
+
 const renderInit = () => {
     const utils = render(<App />);
     const inputUser = utils.getByPlaceholderText("ingrese usuario", {
@@ -51,6 +55,6 @@ test("should error request to api", async () => {
     user.click(buttonSearch)
     await waitForElementToBeRemoved(()=>utils.getByText(/cargando/i))
     expect(getUser).toHaveBeenCalledWith('i4334jnrkni43')
-    expect(getUser).toHaveBeenCalledTimes(2)
+    expect(getUser).toHaveBeenCalledTimes(1)
     expect(utils.getByText('found', {exact: false})).toBeInTheDocument()
 });
