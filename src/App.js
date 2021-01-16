@@ -1,54 +1,61 @@
-import React, { useState } from "react";
-import "./App.css";
-import { getUser } from "./serviceGithub";
+import React, { useCallback } from 'react';
 
-function App() {
-    const [user, setUser] = useState();
-    const [listProjects, setListProjects] = useState();
-    const [error, setError] = useState();
-    const [loading, setLoading] = useState(false);
+const App = () => {
+    console.log('Render: App');
+    const [users, setUsers] = React.useState([
+      { id: 'a', name: 'Robin' },
+      { id: 'b', name: 'Dennis' },
+    ]);
+   
+    const [text, setText] = React.useState('');
 
-    const searchProjects = () => {
-        setListProjects()
-        setError();
-        setLoading(true);
-        getUser(user)
-            .then((res) => {
-                // console.log("RESSS", res);
-                setListProjects(res);
-                setLoading(false);
-            })
-            .catch((e) => {
-                console.log("ERRO FRONTT", e.data.message);
-                setError(`Error: ${e.data.message}`);
-                setLoading(false);
-            });
+    
+   
+    const handleText = (event) => {
+      setText(event.target.value);
     };
-
+   
+    const handleAddUser = ()  =>{
+      setUsers(users.concat({ id: new Date().getTime(), name: text }));
+    };
+   
+    const handleRemove = useCallback((id) => {
+      setUsers(users.filter((user) => user.id !== id));
+    }, [users])
+   
     return (
-        <div style={{ padding: 30 }}>
-            <label htmlFor="user-input">Usuario: </label>
-            <input
-                id="user-input"
-                placeholder={"ingrese usuario"}
-                value={user || ""}
-                onChange={(e) => setUser(e.target.value)}
-            />
-            <button disabled={!user} onClick={searchProjects}>
-                Buscar
-            </button>
-
-            {listProjects && listProjects.length > 0 ? (
-                listProjects.map((p,i) => <p key={p.id+i}>{p.name}</p>)
-            ) : !listProjects && loading ? (
-                <p>Cargando</p>
-            ) : !listProjects && !error ? (
-                <p>Esperando user</p>
-            ) : (
-                <div>Error: {error}</div>
-            )}
-        </div>
+      <div>
+        <input type="text" value={text} onChange={handleText} />
+        <button type="button" onClick={handleAddUser}>
+          Add User
+        </button>
+   
+        <List list={users} onRemove={handleRemove} />
+      </div>
     );
-}
-
-export default App;
+  };
+   
+  const List = React.memo(({ list, onRemove }) => {
+    console.log('Render: List');
+    return (
+      <ul>
+        {list.map((item) => (
+          <ListItem key={item.id} item={item} onRemove={onRemove} />
+        ))}
+      </ul>
+    );
+  });
+   
+  const ListItem = React.memo(({ item, onRemove }) => {
+    console.log('Render: ListItem');
+    return (
+      <li>
+        {item.name}
+        <button type="button" onClick={() => onRemove(item.id)}>
+          Remove
+        </button>
+      </li>
+    );
+  });
+   
+  export default App;
